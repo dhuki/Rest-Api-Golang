@@ -46,7 +46,7 @@ func (p postgres) Start(env string) (*gorm.DB, error) {
 		if err != nil {
 			return nil, err
 		}
-		db.LogMode(false)
+		db.LogMode(false) // disable auto logging from gorm lib
 	}
 	return db, nil
 }

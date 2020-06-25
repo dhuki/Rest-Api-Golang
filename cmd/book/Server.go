@@ -11,25 +11,29 @@ import (
 	"github.com/jinzhu/gorm"
 )
 
-type server struct {
+type server interface {
+	Start() http.Handler
+}
+
+type booksServer struct {
 	db     *gorm.DB
 	logger log.Logger
 }
 
 func NewServer(db *gorm.DB, logger log.Logger) server {
-	return server{
+	return booksServer{
 		db:     db,
 		logger: logger,
 	}
 }
 
-func (s server) Start() http.Handler {
+func (s booksServer) Start() http.Handler {
 	var srv usecase.Usecase
 	{
 		infrastructure := infrastructure.NewBookRepo(s.db, s.logger)
 		service := service.NewBookService(infrastructure)
 		srv = usecase.NewUsecase(service, infrastructure, s.logger)
-		srv = usecase.NewMiddleware(s.logger, srv)
+		srv = usecase.NewMiddleware(srv, s.logger)
 	}
 
 	handler := presenter.NewHttpServer(srv, s.logger)

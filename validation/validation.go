@@ -15,11 +15,11 @@ func GenerateToken(id, role string) (string, error) {
 		Audience:  "api.dhukidwir.herokuapp.com", // identify more specific from issuer for client validation
 		Id:        id,                            // id user logged
 		Subject:   role,                          // information about user who logged
-		IssuedAt:  time.Now().Local().UnixNano(), // issued at the time and convert it to nano second
-		ExpiresAt: expired.Local().UnixNano(),    // expiration
+		IssuedAt:  time.Now().Unix(),             // issued at the time and convert it to nano second
+		ExpiresAt: expired.Unix(),                // expiration
 	})
 
-	tokenString, err := token.SignedString(SECRET) // complete generate token with secret
+	tokenString, err := token.SignedString([]byte(SECRET)) // complete generate token with secret need passing type []byte
 	if err != nil {
 		return "", err
 	}
@@ -29,7 +29,7 @@ func GenerateToken(id, role string) (string, error) {
 
 func ParseToken(tokenString string) (*jwt.Token, error) { // authorization process, verifying if you've access ?
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-		// Don't forget to validate the alg is what you expect:
+		// Don't forget to validate the algo hash that you expect:
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, errors.New("Unexpected signing method")
 		}

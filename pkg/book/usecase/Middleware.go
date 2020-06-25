@@ -16,7 +16,7 @@ type middleware struct {
 	usecase Usecase
 }
 
-func NewMiddleware(logger log.Logger, usecase Usecase) Usecase {
+func NewMiddleware(usecase Usecase, logger log.Logger) Usecase {
 	return middleware{
 		logger:  logger,
 		usecase: usecase,
@@ -25,11 +25,14 @@ func NewMiddleware(logger log.Logger, usecase Usecase) Usecase {
 
 func (m middleware) CreateBookUsecase(ctx context.Context, request model.CreateBookRequest) (response common.BaseResponse, err error) {
 	defer func(begin time.Time) {
+		// baseInfo := ctx.Value(common.Auth).(common.BaseAuth)
 		level.Info(m.logger).Log(
 			"description", "INTERCEPTOR",
 			"took", time.Since(begin),
-			"request", fmt.Sprintf("%+v", request),
-			"response", fmt.Sprintf("%+v", response))
+			// "url", baseInfo.URL,
+			// "method", baseInfo.Method,
+			"request", fmt.Sprintf("%+v", request), // givin output of struct to this -> attribute : value
+			"response", fmt.Sprintf("%+v", response)) // givin output of struct to this -> attribute : value
 	}(time.Now())
 	return m.usecase.CreateBookUsecase(ctx, request)
 }

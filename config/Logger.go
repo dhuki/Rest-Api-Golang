@@ -20,11 +20,6 @@ func NewLogger() log.Logger {
 		logLogrus.SetOutput(os.Stdout)
 	}
 
-	logLogrus.WithFields(logrus.Fields{
-		"prefix":      "sensor",
-		"temperature": -4,
-	})
-
 	// set up log associate with logrus
 	var logger log.Logger
 	{ // using closure, var closure to make more readable
