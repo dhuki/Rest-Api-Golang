@@ -37,12 +37,6 @@ func main() {
 	defer db.Close() // close connection to db
 	// end setup
 
-	// initialize book server
-	bookServer := book.NewServer(db, logger)
-
-	// initialize book server
-	userServer := user.NewServer(db, logger)
-
 	errs := make(chan error)
 
 	go func() {
@@ -54,8 +48,11 @@ func main() {
 	}()
 
 	go func() {
+		// initialize module server
+		bookServer := book.NewServer(db, logger)
+		userServer := user.NewServer(db, logger)
+
 		mux := http.NewServeMux()
-		// router
 		// mux.Handle("/demo/api/books/", bookServer.Start())
 		mux.Handle("/demo/api/users/", userServer.Start())
 		mux.Handle("/demo/", http.StripPrefix("/demo", bookServer.Start()))
