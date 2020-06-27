@@ -5,4 +5,7 @@ const DB_ENV_DIR = "./.env"
 // Auth is type for passing information in context
 const Auth = "auth"
 
-const FormatDate = "Mon Jan 2 15:04:05 2006"
+const Success = "Success"
+
+// Error cons
+const ErrInternalServerError = "Error"

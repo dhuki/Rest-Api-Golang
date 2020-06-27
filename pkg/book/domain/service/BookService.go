@@ -7,5 +7,5 @@ import (
 )
 
 type BookService interface {
-	Create(context.Context, entity.Book) error
+	ChangeData(context.Context, entity.Book) error
 }

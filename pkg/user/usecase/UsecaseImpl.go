@@ -9,6 +9,7 @@ import (
 	"github.com/dhuki/Rest-Api-Golang/pkg/user/domain/service"
 	"github.com/dhuki/Rest-Api-Golang/pkg/user/presenter/model"
 	"github.com/dhuki/Rest-Api-Golang/validation"
+	"github.com/google/uuid"
 )
 
 type usecaseImpl struct {
@@ -27,7 +28,7 @@ func (u usecaseImpl) CreateUserUsecase(ctx context.Context, req model.CreateUser
 	var response common.BaseResponse
 	{
 		user := entity.User{
-			ID:       "y",
+			ID:       uuid.New().String(),
 			Username: req.Username,
 			Password: req.Password,
 			Role:     req.Role,

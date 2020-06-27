@@ -22,9 +22,10 @@ func NewHttpServer(usecase usecase.Usecase, logger log.Logger) http.Handler {
 	// r.Use(commonMiddleware)
 	router := r.PathPrefix("/api").Subrouter()
 	router.Use(commonMiddleware)
+	router.Use(validationMiddleware(logger))
 
-	router2 := r.PathPrefix("/api").Subrouter()
-	router.Use(commonMiddleware)
+	// router2 := r.PathPrefix("/api").Subrouter()
+	// router.Use(commonMiddleware)
 
 	// setting up error log for internal and FE
 	// ServerOption is func() type of data
@@ -34,16 +35,44 @@ func NewHttpServer(usecase usecase.Usecase, logger log.Logger) http.Handler {
 		httptransport.ServerErrorHandler(common.ErrorHandlerCustom(logger)),
 	}
 
-	router.Methods("POST").Path("/books").Handler(httptransport.NewServer(
+	// router.Methods("POST").Path("/books").Handler(httptransport.NewServer(
+	// 	MakeCreateBookEndpoint(usecase),
+	// 	model.DecodeCreateBookRequest,
+	// 	model.EncodeResponse,
+	// 	option...,
+	// ))
+
+	router.Methods("POST").Path("/").Handler(httptransport.NewServer(
 		MakeCreateBookEndpoint(usecase),
 		model.DecodeCreateBookRequest,
 		model.EncodeResponse,
 		option...,
 	))
 
-	router2.Methods("POST").Path("/book").Handler(httptransport.NewServer(
-		MakeCreateBookEndpoint(usecase),
-		model.DecodeCreateBookRequest,
+	router.Methods("PUT").Path("/").Handler(httptransport.NewServer(
+		MakeUpdateBookEndpoint(usecase),
+		model.DecodeUpdateBookRequest,
+		model.EncodeResponse,
+		option...,
+	))
+
+	router.Methods("GET").Path("/{id}").Handler(httptransport.NewServer(
+		MakeGetBookEndpoint(usecase),
+		model.DecodeGetBookRequest,
+		model.EncodeResponse,
+		option...,
+	))
+
+	router.Methods("GET").Path("/").Handler(httptransport.NewServer(
+		MakeGetBooksEndpoint(usecase),
+		common.ListRequest,
+		model.EncodeResponse,
+		option...,
+	))
+
+	router.Methods("DELETE").Path("/{id}").Handler(httptransport.NewServer(
+		MakeDeleteBookEndpoint(usecase),
+		model.DecodeDeleteBookRequest,
 		model.EncodeResponse,
 		option...,
 	))
@@ -62,50 +91,47 @@ func NewHttpServer(usecase usecase.Usecase, logger log.Logger) http.Handler {
 	// 	option...,
 	// ))
 
-	// r.Methods("GET").Path("").Handler(httptransport.NewServer())
-	// r.Methods("GET").Path("/{id}").Handler(httptransport.NewServer())
-	// r.Methods("PUT").Path("").Handler(httptransport.NewServer())
-	// r.Methods("DELETE").Path("").Handler(httptransport.NewServer())
-
-	return router2
+	return router
 }
 
-func validationMiddleware(next http.Handler, logger log.Logger) http.Handler {
-	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		ctx := r.Context()
+func validationMiddleware(logger log.Logger) func(http.Handler) http.Handler {
+	return func(next http.Handler) http.Handler {
+		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+			ctx := r.Context()
 
-		authHeader := r.Header.Get("Authorization")
-		bearerToken := strings.Split(authHeader, " ") // bcs token return "Bearer xxxxxx"
-		token := bearerToken[1]
+			authHeader := r.Header.Get("Authorization")
+			bearerToken := strings.Split(authHeader, " ") // bcs token return "Bearer xxxxxx"
+			token := bearerToken[1]
 
-		// fmt.Println(token)
+			// fmt.Println(token)
 
-		auth, err := validation.ParseToken(token)
-		if err != nil {
-			common.ErrorEncoder(ctx, err, w)
-			level.Error(logger).Log("message", err, "description", "AUTHENTICATION & AUTHORIZATION")
-			return
-		}
+			auth, err := validation.ParseToken(token)
+			if err != nil {
+				common.ErrorEncoder(ctx, err, w)
+				level.Error(logger).Log("message", err, "description", "AUTHENTICATION & AUTHORIZATION")
+				return
+			}
 
-		claim, ok := auth.Claims.(jwt.MapClaims) // assertion interface to map bcs it implement method interface
-		if !ok {
-			err = errors.New("Cannot make assertion")
-			common.ErrorEncoder(ctx, err, w)
-			level.Error(logger).Log("message", err, "description", "AUTHENTICATION & AUTHORIZATION")
-			return
-		}
+			claim, ok := auth.Claims.(jwt.MapClaims) // assertion interface to map bcs it implement method interface
+			if !ok {
+				err = errors.New("Cannot make assertion")
+				common.ErrorEncoder(ctx, err, w)
+				level.Error(logger).Log("message", err, "description", "AUTHENTICATION & AUTHORIZATION")
+				return
+			}
 
-		baseAuth := common.BaseAuth{
-			ID:     claim["jti"].(string),
-			URL:    r.URL.String(),
-			Method: r.Method,
-		}
+			baseAuth := common.BaseAuth{
+				ID:     claim["jti"].(string),
+				URL:    r.URL.String(),
+				Method: r.Method,
+			}
 
-		childCtx := context.WithValue(ctx, common.Auth, baseAuth) // making child of parent context with value inside it
-		r = r.WithContext(childCtx)                               // bind child ctx with request
+			childCtx := context.WithValue(ctx, common.Auth, baseAuth) // making child of parent context with value inside it
+			r = r.WithContext(childCtx)                               // bind child ctx with request
 
-		next.ServeHTTP(w, r)
-	})
+			next.ServeHTTP(w, r)
+		})
+	}
 }
 
 func commonMiddleware(next http.Handler) http.Handler {

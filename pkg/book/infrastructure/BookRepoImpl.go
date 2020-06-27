@@ -28,3 +28,44 @@ func (b bookRepoImpl) Create(ctx context.Context, book entity.Book) error {
 	}
 	return nil
 }
+
+func (b bookRepoImpl) Update(ctx context.Context, book entity.Book) error {
+	db := b.db.Save(&book)
+	if db.Error != nil {
+		return db.Error
+	}
+	return nil
+}
+
+func (b bookRepoImpl) GetBook(ctx context.Context, id string) (entity.Book, error) {
+	book := entity.Book{
+		ID: id,
+	}
+
+	db := b.db.First(&book)
+	if db.Error != nil {
+		return entity.Book{}, db.Error
+	}
+	return book, nil
+}
+
+func (b bookRepoImpl) GetBooks(ctx context.Context) ([]entity.Book, error) {
+	var books []entity.Book
+	db := b.db.Find(&books)
+	if db.Error != nil {
+		return []entity.Book{}, db.Error
+	}
+	return books, nil
+}
+
+func (b bookRepoImpl) DeleteBook(ctx context.Context, id string) error {
+	book := entity.Book{
+		ID: id,
+	}
+
+	db := b.db.Delete(&book)
+	if db.Error != nil {
+		return db.Error
+	}
+	return nil
+}

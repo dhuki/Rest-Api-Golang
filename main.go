@@ -55,7 +55,7 @@ func main() {
 		mux := http.NewServeMux()
 		// mux.Handle("/demo/api/books/", bookServer.Start())
 		mux.Handle("/demo/api/users/", userServer.Start())
-		mux.Handle("/demo/", http.StripPrefix("/demo", bookServer.Start()))
+		mux.Handle("/demo/books/", http.StripPrefix("/demo/books", bookServer.Start()))
 
 		errs <- http.ListenAndServe(":8080", mux) // return error when serve http
 	}()

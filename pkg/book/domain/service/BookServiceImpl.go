@@ -17,6 +17,9 @@ func NewBookService(repo repo.BookRepo) BookService {
 	}
 }
 
-func (b bookServiceImpl) Create(ctx context.Context, book entity.Book) error {
+func (b bookServiceImpl) ChangeData(ctx context.Context, book entity.Book) error {
+	// book.Author = request.Author
+	// book.Title = request.Title
+	// book.Year = request.Year
 	return nil
 }

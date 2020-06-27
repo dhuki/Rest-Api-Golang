@@ -8,4 +8,8 @@ import (
 
 type BookRepo interface {
 	Create(ctx context.Context, book entity.Book) error
+	Update(ctx context.Context, book entity.Book) error
+	GetBook(ctx context.Context, id string) (entity.Book, error)
+	GetBooks(ctx context.Context) ([]entity.Book, error)
+	DeleteBook(ctx context.Context, id string) error
 }
